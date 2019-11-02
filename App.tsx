@@ -2,11 +2,12 @@ import React from "react";
 import { SafeAreaView } from "react-native";
 import { constants } from "./constants/constants";
 import { Home } from "./screens/Home";
+import { Splash } from "./screens/Splash";
 import * as Font from "expo-font";
 
 export default class App extends React.Component<{}> {
   state = {
-    fontsLoaded: false
+    loaded: false
   };
 
   async componentDidMount() {
@@ -24,12 +25,12 @@ export default class App extends React.Component<{}> {
       console.log(err);
     }
     console.log("loaded fonts");
-    this.setState({ fontsLoaded: true });
+    setTimeout(() => this.setState({ loaded: true }), 1000);
   }
 
   render() {
-    if (!this.state.fontsLoaded) {
-      return null;
+    if (!this.state.loaded) {
+      return <Splash />;
     }
     return (
       <SafeAreaView style={{ paddingTop: constants.androidPadding }}>

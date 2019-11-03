@@ -99,7 +99,6 @@ export const Home = () => {
       }
 
       const tags = text.split(" ");
-      const lastCharacterIsSpace = text[text.length - 1] === " ";
 
       const tagsWithHashes = tags.map(tag => {
         if (tag[0] === "#") {

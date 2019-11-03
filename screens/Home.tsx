@@ -1,52 +1,87 @@
-import React from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, Text, View, TextInput, Animated } from "react-native";
+
+// TODO make imports more pure
 import { Icon } from "../components/Icon";
+import { Button } from "../components/Button";
 import { constants } from "../constants/constants";
 
+const TEXT_1 = `IHG is a hashtag generator and description editor`;
+const TEXT_2 = `We want to help you create well formatted profile descriptions with provided options for up to 30 popular hash tags to help grow your instagram network.`;
+const TEXT_3 = `Curious to how this product works? Check out our tutorial`;
+
 export const Home = () => {
+  // TODO have a text input handler that automatically adds the hashtag if user hasn't manually added it
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searching, setSearching] = useState(false);
+
+  const [fadeAnim] = useState(new Animated.Value(1));
+
+  const fade = () =>
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 500
+    }).start();
+
+  const unfade = () =>
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500
+    }).start();
+
   return (
-    <View style={styles.container}>
-      <Icon />
-      <View>
-        <Text style={styles.headerText}>Generate hash tags</Text>
-        <TextInput
-          style={styles.textInput}
-          value="#kimchi #architecture #fashion"
-        />
-        {/* TODO: Figure out how to add that smaller shadow to the button */}
-        <TouchableOpacity
-          onPress={() => console.log("Search clicked")}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>SEARCH</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerText}>About</Text>
-        <View style={{}}>
-          <Text style={styles.weakText}>
-            IHG is a hashtag generator and description editor
-          </Text>
-          <Text style={styles.weakText}>
-            We want to help you create well formatted profile descriptions with
-            provide options for up to 30 popular hash tags to help grow your
-            instagram network.
-          </Text>
-          <Text style={styles.weakText}>
-            Curious to how this product works? Check out our tutorial
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => console.log("Search clicked")}
-          style={styles.learnMoreButton}
-        >
-          <Text style={styles.learnMoreButtonText}>LEARN MORE</Text>
-        </TouchableOpacity>
-      </View>
+    <View
+      style={[
+        styles.container,
+        { transform: [{ translateY: searching ? -72 : 0 }] }
+      ]}
+    >
+      <Icon opacity={fadeAnim} />
+      <Text style={styles.headerText}>Generate hash tags</Text>
+      <TextInput
+        onBlur={() => {
+          unfade();
+          setSearching(false);
+        }}
+        onFocus={() => {
+          fade();
+          setSearching(true);
+        }}
+        onChangeText={text => setSearchTerm(text)}
+        placeholder="#kimchi, #architecture, #fashion"
+        returnKeyType="search"
+        style={styles.textInput}
+        value={searchTerm}
+      />
+
+      {searching ? null : (
+        /* TODO: Figure out how to add that smaller shadow to the button */
+        <>
+          <Button
+            onPress={() => {
+              setSearching(false);
+              console.log("Search clicked");
+            }}
+            buttonStyle={styles.button}
+            textStyle={styles.buttonText}
+            text="SEARCH"
+          />
+          <Text style={styles.headerText}>About</Text>
+          <View style={{}}>
+            <Text style={styles.weakText}>{TEXT_1}</Text>
+            <Text style={styles.weakText}>{TEXT_2}</Text>
+            <Text style={styles.weakText}>{TEXT_3}</Text>
+          </View>
+          <Button
+            onPress={() => {
+              console.log("Learn more clicked");
+            }}
+            buttonStyle={styles.learnMoreButton}
+            textStyle={styles.learnMoreButtonText}
+            text="LEARN MORE"
+          />
+        </>
+      )}
     </View>
   );
 };

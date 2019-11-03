@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,11 +8,11 @@ import {
   TouchableWithoutFeedback,
   Keyboard
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
 
 // TODO make imports more pure
 import { Icon } from "../components/Icon";
 import { Button } from "../components/Button";
+import { BackButton } from "../components/BackButton";
 import { constants } from "../constants/constants";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -28,53 +28,75 @@ const mockedTerms = [
 
 export const Home = () => {
   // TODO have a text input handler that automatically adds the hashtag if user hasn't manually added it
-  // TODO simply all this and break it up into components
+  // TODO simplify all this and break it up into components
   const [searchTerm, setSearchTerm] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [recentlySearchedTerms, setRecentlySearchedTerms] = useState<string[]>(
     termsFromLocalStorage
   );
+  const [showingSearchResults, setShowingSearchResults] = useState(false);
   const [suggestedHashtagList, setSuggestedHashtagList] = useState<string[]>(
     mockedTerms
   );
 
-  const [searching, setSearching] = useState(false);
-  const [showingSearchResults, setShowingSearchResults] = useState(false);
-
+  // ANIMATIONS
   const [fadeAnim] = useState(new Animated.Value(1));
   const [slideAnim] = useState(new Animated.Value(0));
   const [shadowSlideAnim] = useState(new Animated.Value(1000));
-
-  const fade = () =>
+  const slideUp = () => {
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 150
     }).start();
-
-  const unfade = () =>
+    Animated.spring(slideAnim, {
+      toValue: -67
+    }).start();
+    Animated.spring(shadowSlideAnim, {
+      toValue: 0
+    }).start();
+  };
+  const slideDown = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 400
     }).start();
-
-  const slideUp = () =>
-    Animated.spring(slideAnim, {
-      toValue: -72
-    }).start();
-
-  const slideDown = () =>
     Animated.spring(slideAnim, {
       toValue: 0
     }).start();
-
-  const shadowSlideUp = () =>
-    Animated.spring(shadowSlideAnim, {
-      toValue: 0
-    }).start();
-
-  const shadowSlideDown = () =>
     Animated.spring(shadowSlideAnim, {
       toValue: 500
     }).start();
+  };
+
+  // EVENT HANDLERS
+  const reset = () => {
+    shadowSlideAnim.setValue(1000);
+    slideDown();
+    setSearchTerm("");
+    setIsTyping(false);
+    setShowingSearchResults(false);
+  };
+  const handleKeyboardShow = () => {
+    slideUp();
+    setShowingSearchResults(false);
+    setIsTyping(true);
+  };
+  const handleKeyboardHide = () => {
+    setTimeout(() => {
+      if (!showingSearchResults) {
+        slideDown();
+      }
+    }, 0);
+    setIsTyping(false);
+  };
+  const handleChangeText = text => {
+    setSearchTerm(text);
+  };
+  const handleSubmit = () => {
+    Keyboard.dismiss();
+    setIsTyping(false);
+    setShowingSearchResults(true);
+  };
 
   return (
     <>
@@ -93,74 +115,47 @@ export const Home = () => {
             ]}
           >
             <Icon opacity={fadeAnim} />
+
             {!showingSearchResults ? (
               <Text style={[styles.headerText, { marginTop: 15 }]}>
                 Generate hash tags
               </Text>
             ) : (
-              <View
-                style={{
-                  marginTop: 15,
-                  marginBottom: -2,
-                  width: "100%",
-                  flexDirection: "row"
-                }}
-              >
-                <BackButton />
-                <View
-                  style={{
-                    flexGrow: 1,
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
+              <View style={styles.searchResultsHeaderContainer}>
+                <BackButton onPress={reset} />
+                <View style={styles.centerHeaderText}>
                   <Text style={[styles.headerText, { marginTop: 2 }]}>
                     Your 30 hash tags
                   </Text>
                 </View>
               </View>
             )}
-            <TextInput
-              onFocus={() => {
-                fade();
-                slideUp();
-                shadowSlideUp();
-                setShowingSearchResults(false);
-                setSearching(true);
-              }}
-              onBlur={() => {
-                setTimeout(() => {
-                  if (!showingSearchResults) {
-                    console.log("\n\nnot showing search results\n\n");
-                    unfade();
-                    slideDown();
-                    shadowSlideDown();
-                  }
-                }, 0);
 
-                setSearching(false);
-              }}
-              onChangeText={text => setSearchTerm(text)}
+            <TextInput
+              onFocus={handleKeyboardShow}
+              onBlur={handleKeyboardHide}
+              onChangeText={handleChangeText}
               placeholder="#kimchi, #architecture, #fashion"
               returnKeyType="search"
-              onSubmitEditing={() => setShowingSearchResults(true)}
+              onSubmitEditing={handleSubmit}
               style={styles.textInput}
               value={searchTerm}
             />
+            {!showingSearchResults && (
+              <Button
+                onPress={handleSubmit}
+                buttonStyle={styles.button}
+                textStyle={styles.buttonText}
+                text="SEARCH"
+              />
+            )}
 
-            {!searching && !showingSearchResults && (
+            {!isTyping && !showingSearchResults && (
               /* TODO: Figure out how to add that smaller shadow to the button */
               <>
-                <Button
-                  onPress={() => {
-                    setSearching(false);
-                    console.log("Search clicked");
-                  }}
-                  buttonStyle={styles.button}
-                  textStyle={styles.buttonText}
-                  text="SEARCH"
-                />
-                <Text style={styles.headerText}>About</Text>
+                <Text style={[styles.headerText, { marginTop: 50 }]}>
+                  About
+                </Text>
                 <View style={styles.weakTextContainer}>
                   <Text style={styles.weakText}>{TEXT_1}</Text>
                   <Text style={styles.weakText}>{TEXT_2}</Text>
@@ -177,6 +172,7 @@ export const Home = () => {
               </>
             )}
           </Animated.View>
+
           {!showingSearchResults ? (
             <>
               <LinearGradient
@@ -222,11 +218,6 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingHorizontal: 22,
     backgroundColor: "#fff"
-    // box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
-    // shadowOffset: { height: 4, width: 0 },
-    // shadowColor: "#000",
-    // shadowOpacity: 0.25,
-    // shadowRadius: 16
   },
   bottomContainer: {
     paddingHorizontal: 22
@@ -246,7 +237,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     height: 50,
-    marginBottom: 60
+    marginBottom: 15
   },
   buttonText: {
     color: "#FFFFFF",
@@ -297,13 +288,24 @@ const styles = StyleSheet.create({
     marginTop: 5,
     lineHeight: 25,
     marginBottom: 10
+  },
+  backButtonContainer: {
+    width: 24,
+    height: 24,
+    position: "absolute",
+    zIndex: 10000,
+    alignItems: "center"
+  },
+  centerHeaderText: {
+    width: "100%",
+    alignItems: "center"
+  },
+  searchResultsHeaderContainer: {
+    marginTop: 15,
+    marginBottom: 3,
+    width: "100%",
+    flexDirection: "row"
   }
 });
 
 const hashTagListColors = ["#FF38C7", "#4EFF10", "#13FFD5"];
-
-const BackButton = () => (
-  <Svg width="13" height="24" viewBox="0 0 13 24" fill="none">
-    <Path d="M11 23L2 12.5L11 1" stroke="#FF0000" strokeWidth="3" />
-  </Svg>
-);

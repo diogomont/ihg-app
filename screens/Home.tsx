@@ -1,40 +1,58 @@
 import React, { useState, useEffect } from "react";
 import {
-  ViewStyle,
   StyleSheet,
   Text,
   View,
   TextInput,
-  Animated
+  Animated,
+  TouchableWithoutFeedback,
+  Keyboard
 } from "react-native";
 
 // TODO make imports more pure
 import { Icon } from "../components/Icon";
 import { Button } from "../components/Button";
 import { constants } from "../constants/constants";
+import { LinearGradient } from "expo-linear-gradient";
 
 const TEXT_1 = `IHG is a hashtag generator and description editor`;
 const TEXT_2 = `We want to help you create well formatted profile descriptions with provided options for up to 30 popular hash tags to help grow your instagram network.`;
 const TEXT_3 = `Curious to how this product works? Check out our tutorial`;
+const termsFromLocalStorage = ["#terence", "#bighips", "#scottfromlowes"];
+const mockedTerms = [
+  `#korean #korea #kdrama #seoul #koreanpop`,
+  `#pizza #italianfood #italian #pizzeria #pizzaria #피자 #megherita #dinner #ピザ #pizzaparty #napoli #pizzaislife #pizzalovers`,
+  `#taco #tacotuesday #tacos #tacoma #yota`
+];
 
 export const Home = () => {
   // TODO have a text input handler that automatically adds the hashtag if user hasn't manually added it
+  // TODO simply all this and break it up into components
   const [searchTerm, setSearchTerm] = useState("");
+  const [recentlySearchedTerms, setRecentlySearchedTerms] = useState<string[]>(
+    termsFromLocalStorage
+  );
+  const [suggestedHashtagList, setSuggestedHashtagList] = useState<string[]>(
+    mockedTerms
+  );
+
   const [searching, setSearching] = useState(false);
+  const [showingSearchResults, setShowingSearchResults] = useState(false);
 
   const [fadeAnim] = useState(new Animated.Value(1));
   const [slideAnim] = useState(new Animated.Value(0));
+  const [shadowSlideAnim] = useState(new Animated.Value(1000));
 
   const fade = () =>
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 100
+      duration: 150
     }).start();
 
   const unfade = () =>
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 100
+      duration: 400
     }).start();
 
   const slideUp = () =>
@@ -47,68 +65,132 @@ export const Home = () => {
       toValue: 0
     }).start();
 
-  return (
-    <Animated.View
-      style={[styles.container, { transform: [{ translateY: slideAnim }] }]}
-    >
-      <Icon opacity={fadeAnim} />
-      <Text style={styles.headerText}>Generate hash tags</Text>
-      <TextInput
-        onBlur={() => {
-          unfade();
-          slideDown();
-          setSearching(false);
-        }}
-        onFocus={() => {
-          fade();
-          slideUp();
-          setSearching(true);
-        }}
-        onChangeText={text => setSearchTerm(text)}
-        placeholder="#kimchi, #architecture, #fashion"
-        returnKeyType="search"
-        style={styles.textInput}
-        value={searchTerm}
-      />
+  const shadowSlideUp = () =>
+    Animated.spring(shadowSlideAnim, {
+      toValue: 0
+    }).start();
 
-      {searching ? null : (
-        /* TODO: Figure out how to add that smaller shadow to the button */
-        <>
-          <Button
-            onPress={() => {
-              setSearching(false);
-              console.log("Search clicked");
-            }}
-            buttonStyle={styles.button}
-            textStyle={styles.buttonText}
-            text="SEARCH"
-          />
-          <Text style={styles.headerText}>About</Text>
-          <View style={{}}>
-            <Text style={styles.weakText}>{TEXT_1}</Text>
-            <Text style={styles.weakText}>{TEXT_2}</Text>
-            <Text style={styles.weakText}>{TEXT_3}</Text>
-          </View>
-          <Button
-            onPress={() => {
-              console.log("Learn more clicked");
-            }}
-            buttonStyle={styles.learnMoreButton}
-            textStyle={styles.learnMoreButtonText}
-            text="LEARN MORE"
-          />
-        </>
-      )}
-    </Animated.View>
+  const shadowSlideDown = () =>
+    Animated.spring(shadowSlideAnim, {
+      toValue: 500
+    }).start();
+
+  return (
+    <>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <Animated.View
+          style={{
+            transform: [{ translateY: slideAnim }]
+          }}
+        >
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                paddingBottom: shadowSlideAnim
+              }
+            ]}
+          >
+            <Icon opacity={fadeAnim} />
+            <Text style={[styles.headerText, { marginTop: 15 }]}>
+              Generate hash tags
+            </Text>
+            <TextInput
+              onFocus={() => {
+                fade();
+                slideUp();
+                shadowSlideUp();
+                setShowingSearchResults(false);
+                setSearching(true);
+              }}
+              onBlur={() => {
+                unfade();
+                slideDown();
+                if (!showingSearchResults) {
+                  shadowSlideDown();
+                }
+                setSearching(false);
+              }}
+              onChangeText={text => setSearchTerm(text)}
+              placeholder="#kimchi, #architecture, #fashion"
+              returnKeyType="search"
+              onSubmitEditing={() => setShowingSearchResults(true)}
+              style={styles.textInput}
+              value={searchTerm}
+            />
+
+            {!searching && !showingSearchResults && (
+              /* TODO: Figure out how to add that smaller shadow to the button */
+              <>
+                <Button
+                  onPress={() => {
+                    setSearching(false);
+                    console.log("Search clicked");
+                  }}
+                  buttonStyle={styles.button}
+                  textStyle={styles.buttonText}
+                  text="SEARCH"
+                />
+                <Text style={styles.headerText}>About</Text>
+                <View style={styles.weakTextContainer}>
+                  <Text style={styles.weakText}>{TEXT_1}</Text>
+                  <Text style={styles.weakText}>{TEXT_2}</Text>
+                  <Text style={styles.weakText}>{TEXT_3}</Text>
+                </View>
+                <Button
+                  onPress={() => {
+                    console.log("Learn more clicked");
+                  }}
+                  buttonStyle={styles.learnMoreButton}
+                  textStyle={styles.learnMoreButtonText}
+                  text="LEARN MORE"
+                />
+              </>
+            )}
+          </Animated.View>
+          {!showingSearchResults ? (
+            <>
+              <LinearGradient
+                colors={["#D7D7D7", "#F6F6F6", "#FFF"]}
+                style={{ height: 20, marginBottom: -5 }}
+              />
+              <View style={styles.bottomContainer}>
+                <Text style={styles.headerText}>Recently Searched</Text>
+                {recentlySearchedTerms.map(term => (
+                  <Text style={styles.recentlySearched}>{term}</Text>
+                ))}
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.bottomContainer}>
+                <Text>
+                  {suggestedHashtagList.map(tag => (
+                    <Text style={styles.hashTagList}>{tag}</Text>
+                  ))}{" "}
+                </Text>
+              </View>
+            </>
+          )}
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    // margin: constants.containerPadding,
-    margin: 22,
-    // flex: 1,
+    paddingTop: 22,
+    paddingHorizontal: 22,
     backgroundColor: "#fff"
+    // box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
+    // shadowOffset: { height: 4, width: 0 },
+    // shadowColor: "#000",
+    // shadowOpacity: 0.25,
+    // shadowRadius: 16
+  },
+  bottomContainer: {
+    paddingHorizontal: 22
   },
   textInput: {
     backgroundColor: "#EAF2FF",
@@ -137,12 +219,10 @@ const styles = StyleSheet.create({
     color: "red",
     fontFamily: "InterBold",
     fontSize: 16,
-    marginBottom: 10,
-    marginTop: 15
+    marginBottom: 10
   },
   weakTextContainer: {
-    paddingRight: 30,
-    marginBottom: 40
+    paddingRight: 30
   },
   weakText: {
     color: "#97ABCB",
@@ -164,5 +244,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "InterBlack",
     letterSpacing: 1
+  },
+  recentlySearched: {
+    color: "#96ABCB",
+    fontFamily: "RobotoMonoBold",
+    fontSize: 15,
+    marginTop: 5,
+    marginBottom: 10
+  },
+  hashTagList: {
+    color: "#FF38C7",
+    fontFamily: "RobotoMonoBold",
+    fontSize: 15,
+    marginTop: 5,
+    lineHeight: 25,
+    marginBottom: 10
   }
 });

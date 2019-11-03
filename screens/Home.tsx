@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 // TODO make imports more pure
 import { Icon } from "../components/Icon";
@@ -20,9 +21,9 @@ const TEXT_2 = `We want to help you create well formatted profile descriptions w
 const TEXT_3 = `Curious to how this product works? Check out our tutorial`;
 const termsFromLocalStorage = ["#terence", "#bighips", "#scottfromlowes"];
 const mockedTerms = [
-  `#korean #korea #kdrama #seoul #koreanpop`,
-  `#pizza #italianfood #italian #pizzeria #pizzaria #피자 #megherita #dinner #ピザ #pizzaparty #napoli #pizzaislife #pizzalovers`,
-  `#taco #tacotuesday #tacos #tacoma #yota`
+  `#korean #korea #kdrama #seoul #koreanpop `,
+  `#pizza #italianfood #italian #pizzeria #pizzaria #피자 #megherita #dinner #ピザ #pizzaparty #napoli #pizzaislife #pizzalovers `,
+  `#taco #tacotuesday #tacos #tacoma #yota `
 ];
 
 export const Home = () => {
@@ -92,9 +93,33 @@ export const Home = () => {
             ]}
           >
             <Icon opacity={fadeAnim} />
-            <Text style={[styles.headerText, { marginTop: 15 }]}>
-              Generate hash tags
-            </Text>
+            {!showingSearchResults ? (
+              <Text style={[styles.headerText, { marginTop: 15 }]}>
+                Generate hash tags
+              </Text>
+            ) : (
+              <View
+                style={{
+                  marginTop: 15,
+                  marginBottom: -2,
+                  width: "100%",
+                  flexDirection: "row"
+                }}
+              >
+                <BackButton />
+                <View
+                  style={{
+                    flexGrow: 1,
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <Text style={[styles.headerText, { marginTop: 2 }]}>
+                    Your 30 hash tags
+                  </Text>
+                </View>
+              </View>
+            )}
             <TextInput
               onFocus={() => {
                 fade();
@@ -104,11 +129,15 @@ export const Home = () => {
                 setSearching(true);
               }}
               onBlur={() => {
-                unfade();
-                slideDown();
-                if (!showingSearchResults) {
-                  shadowSlideDown();
-                }
+                setTimeout(() => {
+                  if (!showingSearchResults) {
+                    console.log("\n\nnot showing search results\n\n");
+                    unfade();
+                    slideDown();
+                    shadowSlideDown();
+                  }
+                }, 0);
+
                 setSearching(false);
               }}
               onChangeText={text => setSearchTerm(text)}
@@ -165,9 +194,19 @@ export const Home = () => {
             <>
               <View style={styles.bottomContainer}>
                 <Text>
-                  {suggestedHashtagList.map(tag => (
-                    <Text style={styles.hashTagList}>{tag}</Text>
-                  ))}{" "}
+                  {suggestedHashtagList.map((tag, idx) => (
+                    <Text
+                      style={[
+                        styles.hashTagList,
+                        {
+                          color:
+                            hashTagListColors[idx % hashTagListColors.length]
+                        }
+                      ]}
+                    >
+                      {tag}
+                    </Text>
+                  ))}
                 </Text>
               </View>
             </>
@@ -253,7 +292,6 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   hashTagList: {
-    color: "#FF38C7",
     fontFamily: "RobotoMonoBold",
     fontSize: 15,
     marginTop: 5,
@@ -261,3 +299,11 @@ const styles = StyleSheet.create({
     marginBottom: 10
   }
 });
+
+const hashTagListColors = ["#FF38C7", "#4EFF10", "#13FFD5"];
+
+const BackButton = () => (
+  <Svg width="13" height="24" viewBox="0 0 13 24" fill="none">
+    <Path d="M11 23L2 12.5L11 1" stroke="#FF0000" strokeWidth="3" />
+  </Svg>
+);

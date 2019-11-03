@@ -81,6 +81,7 @@ export const Home = () => {
     setShowingSearchResults(false);
     setIsTyping(true);
   };
+
   const handleKeyboardHide = () => {
     setTimeout(() => {
       if (!showingSearchResults) {
@@ -89,9 +90,31 @@ export const Home = () => {
     }, 0);
     setIsTyping(false);
   };
+
   const handleChangeText = text => {
-    setSearchTerm(text);
+    setSearchTerm(last => {
+      if (text.length < last.length) {
+        // They're trying to backspace, so let's not do any wack formatting here
+        return text;
+      }
+
+      const tags = text.split(" ");
+      const lastCharacterIsSpace = text[text.length - 1] === " ";
+
+      const tagsWithHashes = tags.map(tag => {
+        if (tag[0] === "#") {
+          return tag;
+        }
+
+        return `#${tag}`;
+      });
+
+      const joinedTags = tagsWithHashes.join(" ");
+
+      return joinedTags;
+    });
   };
+
   const handleSubmit = () => {
     Keyboard.dismiss();
     setIsTyping(false);
@@ -182,7 +205,9 @@ export const Home = () => {
               <View style={styles.bottomContainer}>
                 <Text style={styles.headerText}>Recently Searched</Text>
                 {recentlySearchedTerms.map(term => (
-                  <Text style={styles.recentlySearched}>{term}</Text>
+                  <Text key={term} style={styles.recentlySearched}>
+                    {term}
+                  </Text>
                 ))}
               </View>
             </>

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TextInput, Animated } from "react-native";
+import {
+  ViewStyle,
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Animated
+} from "react-native";
 
 // TODO make imports more pure
 import { Icon } from "../components/Icon";
@@ -16,35 +23,45 @@ export const Home = () => {
   const [searching, setSearching] = useState(false);
 
   const [fadeAnim] = useState(new Animated.Value(1));
+  const [slideAnim] = useState(new Animated.Value(0));
 
   const fade = () =>
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 500
+      duration: 100
     }).start();
 
   const unfade = () =>
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500
+      duration: 100
+    }).start();
+
+  const slideUp = () =>
+    Animated.spring(slideAnim, {
+      toValue: -72
+    }).start();
+
+  const slideDown = () =>
+    Animated.spring(slideAnim, {
+      toValue: 0
     }).start();
 
   return (
-    <View
-      style={[
-        styles.container,
-        { transform: [{ translateY: searching ? -72 : 0 }] }
-      ]}
+    <Animated.View
+      style={[styles.container, { transform: [{ translateY: slideAnim }] }]}
     >
       <Icon opacity={fadeAnim} />
       <Text style={styles.headerText}>Generate hash tags</Text>
       <TextInput
         onBlur={() => {
           unfade();
+          slideDown();
           setSearching(false);
         }}
         onFocus={() => {
           fade();
+          slideUp();
           setSearching(true);
         }}
         onChangeText={text => setSearchTerm(text)}
@@ -82,7 +99,7 @@ export const Home = () => {
           />
         </>
       )}
-    </View>
+    </Animated.View>
   );
 };
 

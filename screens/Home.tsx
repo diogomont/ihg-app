@@ -308,6 +308,7 @@ export const Home = () => {
             {/* TODO: Really need to clean up this file and look into a better way of laying this out and doing the slide animation.
             This bottom: 300 prob won't work on all devices */}
             {/* THOUGHT: Instead of bs padding, should position: absolute the other layer off screen and then translate it up. */}
+            {/* Measure screen height, subtract top layer height, use that to set height of the off screen slidable page */}
             <View style={{ position: "absolute", bottom: 300, width: "100%" }}>
               <Button
                 onPress={handleSubmit}

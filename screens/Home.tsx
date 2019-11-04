@@ -6,7 +6,8 @@ import {
   TextInput,
   Animated,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  ScrollView
 } from "react-native";
 
 // TODO make imports more pure
@@ -21,9 +22,29 @@ const TEXT_2 = `We want to help you create well formatted profile descriptions w
 const TEXT_3 = `Curious to how this product works? Check out our tutorial`;
 const termsFromLocalStorage = ["#terence", "#bighips", "#scottfromlowes"];
 const mockedTerms = [
-  `#korean #korea #kdrama #seoul #koreanpop `,
-  `#pizza #italianfood #italian #pizzeria #pizzaria #피자 #megherita #dinner #ピザ #pizzaparty #napoli #pizzaislife #pizzalovers `,
-  `#taco #tacotuesday #tacos #tacoma #yota `
+  [`#korean`, `#korea`, `#kdrama`, `#seoul`, `#koreanpop`],
+  [
+    `#pizza`,
+    `#italianfood`,
+    `#italian`,
+    `#pizzeria`,
+    `#pizzaria`,
+    `#피자`,
+    `#megherita`,
+    `#dinner`,
+    `#ピザ`,
+    `#pizzaparty`
+  ],
+  [
+    `#napoli`,
+    `#pizzaislife`,
+    `#pizzalovers`,
+    `#taco`,
+    `#tacotuesday`,
+    `#tacos`,
+    `#tacoma`,
+    `#yota`
+  ]
 ];
 
 export const Home = () => {
@@ -132,6 +153,7 @@ export const Home = () => {
     if (searchTerm === "") {
       setError(new Error("Type something in!"));
     } else {
+      setError(null);
       slideUp();
       Keyboard.dismiss();
       setIsTyping(false);
@@ -141,12 +163,12 @@ export const Home = () => {
 
   return (
     <>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <Animated.View
-          style={{
-            transform: [{ translateY: slideAnim }]
-          }}
-        >
+      <Animated.View
+        style={{
+          transform: [{ translateY: slideAnim }]
+        }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <Animated.View
             style={[
               styles.container,
@@ -218,27 +240,29 @@ export const Home = () => {
               </>
             )}
           </Animated.View>
+        </TouchableWithoutFeedback>
 
-          {!showingSearchResults ? (
-            <>
-              <LinearGradient
-                colors={["#D7D7D7", "#F6F6F6", "#FFF"]}
-                style={{ height: 20, marginBottom: -5 }}
-              />
-              <View style={styles.bottomContainer}>
-                <Text style={styles.headerText}>Recently Searched</Text>
-                {recentlySearchedTerms.map(term => (
-                  <Text key={term} style={styles.recentlySearched}>
-                    {term}
-                  </Text>
-                ))}
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.bottomContainer}>
-                <Text>
-                  {suggestedHashtagList.map((tag, idx) => (
+        {!showingSearchResults ? (
+          <>
+            <LinearGradient
+              colors={["#D7D7D7", "#F6F6F6", "#FFF"]}
+              style={{ height: 20, marginBottom: -5 }}
+            />
+            <View style={[styles.bottomContainer, { height: "100%" }]}>
+              <Text style={styles.headerText}>Recently Searched</Text>
+              {recentlySearchedTerms.map(term => (
+                <Text key={term} style={styles.recentlySearched}>
+                  {term}
+                </Text>
+              ))}
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={[styles.bottomContainer, { marginBottom: 20 }]}>
+              <Text>
+                {suggestedHashtagList.map((tagArray, idx) => (
+                  <>
                     <Text
                       style={[
                         styles.hashTagList,
@@ -248,15 +272,53 @@ export const Home = () => {
                         }
                       ]}
                     >
-                      {tag}
+                      {tagArray.join(" ")}
                     </Text>
+                    <Text> </Text>
+                  </>
+                ))}
+              </Text>
+            </View>
+            <LinearGradient
+              colors={["#D7D7D7", "#F6F6F6", "#FFF"]}
+              style={{ height: 20, marginBottom: -5 }}
+            />
+            <ScrollView>
+              {suggestedHashtagList.map(tagArray => (
+                <>
+                  <Text style={{ backgroundColor: "pink", width: "100%" }}>
+                    HEADER
+                  </Text>
+                  {tagArray.map(tag => (
+                    <Text>{tag}</Text>
                   ))}
-                </Text>
-              </View>
-            </>
-          )}
-        </Animated.View>
-      </TouchableWithoutFeedback>
+                </>
+              ))}
+              {suggestedHashtagList.map(tagArray => (
+                <>
+                  <Text style={{ backgroundColor: "pink", width: "100%" }}>
+                    HEADER
+                  </Text>
+                  {tagArray.map(tag => (
+                    <Text>{tag}</Text>
+                  ))}
+                </>
+              ))}
+            </ScrollView>
+            {/* TODO: Really need to clean up this file and look into a better way of laying this out and doing the slide animation.
+            This bottom: 300 prob won't work on all devices */}
+            {/* THOUGHT: Instead of bs padding, should position: absolute the other layer off screen and then translate it up. */}
+            <View style={{ position: "absolute", bottom: 300, width: "100%" }}>
+              <Button
+                onPress={handleSubmit}
+                buttonStyle={styles.button}
+                textStyle={styles.buttonText}
+                text="CONFIRM"
+              />
+            </View>
+          </>
+        )}
+      </Animated.View>
     </>
   );
 };

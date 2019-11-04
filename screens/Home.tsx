@@ -38,6 +38,7 @@ export const Home = () => {
   const [suggestedHashtagList, setSuggestedHashtagList] = useState<string[]>(
     mockedTerms
   );
+  const [error, setError] = useState<Error | null>(null);
 
   // ANIMATIONS
   const [fadeAnim] = useState(new Animated.Value(1));
@@ -75,22 +76,24 @@ export const Home = () => {
     setSearchTerm("");
     setIsTyping(false);
     setShowingSearchResults(false);
+    setError(null);
   };
-  const handleKeyboardShow = () => {
+  const handleInputFocus = () => {
     slideUp();
     setShowingSearchResults(false);
     setIsTyping(true);
   };
-
-  const handleKeyboardHide = () => {
-    setTimeout(() => {
-      if (!showingSearchResults) {
-        slideDown();
-      }
-    }, 0);
+  const handleInputBlur = () => {
+    if (error) {
+      return;
+    }
+    if (!showingSearchResults) {
+      slideDown();
+    }
     setIsTyping(false);
   };
 
+  // TODO - prevent user from typing in weird symbols
   const handleChangeText = text => {
     setSearchTerm(last => {
       if (text.length < last.length) {
@@ -98,7 +101,18 @@ export const Home = () => {
         return text;
       }
 
-      const tags = text.split(" ");
+      // prevent empty hashtags by spamming spacebar
+      if (text.substr(-1) === " ") {
+        if (last === "" || last.substr(-1) === "#" || last.substr(-1) === " ") {
+          return last;
+        }
+        if (last.substr(-1) === ",") {
+          return `${last} `;
+        }
+        return `${last}, `;
+      }
+
+      const tags = text.split(", ");
 
       const tagsWithHashes = tags.map(tag => {
         if (tag[0] === "#") {
@@ -108,16 +122,21 @@ export const Home = () => {
         return `#${tag}`;
       });
 
-      const joinedTags = tagsWithHashes.join(" ");
+      const joinedTags = tagsWithHashes.join(", ");
 
       return joinedTags;
     });
   };
 
   const handleSubmit = () => {
-    Keyboard.dismiss();
-    setIsTyping(false);
-    setShowingSearchResults(true);
+    if (searchTerm === "") {
+      setError(new Error("Type something in!"));
+    } else {
+      slideUp();
+      Keyboard.dismiss();
+      setIsTyping(false);
+      setShowingSearchResults(true);
+    }
   };
 
   return (
@@ -154,15 +173,20 @@ export const Home = () => {
             )}
 
             <TextInput
-              onFocus={handleKeyboardShow}
-              onBlur={handleKeyboardHide}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
               onChangeText={handleChangeText}
               placeholder="#kimchi, #architecture, #fashion"
               returnKeyType="search"
               onSubmitEditing={handleSubmit}
-              style={styles.textInput}
+              enablesReturnKeyAutomatically
+              style={[
+                styles.textInput,
+                error && { borderColor: "orange", borderWidth: 1 }
+              ]}
               value={searchTerm}
             />
+            {error && <Text style={styles.errorText}>{error.message}</Text>}
             {!showingSearchResults && (
               <Button
                 onPress={handleSubmit}
@@ -253,7 +277,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 50,
     marginBottom: 15,
-    paddingHorizontal: 12
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#EAF2FF",
+    borderStyle: "dashed"
   },
   button: {
     alignItems: "center",
@@ -329,6 +356,13 @@ const styles = StyleSheet.create({
     marginBottom: 3,
     width: "100%",
     flexDirection: "row"
+  },
+  errorText: {
+    fontFamily: "RobotoMonoBold",
+    color: "orange",
+    marginLeft: 5,
+    marginTop: -10,
+    marginBottom: 10
   }
 });
 

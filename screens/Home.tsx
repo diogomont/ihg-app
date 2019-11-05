@@ -7,7 +7,8 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Keyboard,
-  ScrollView
+  ScrollView,
+  Dimensions
 } from "react-native";
 
 // TODO make imports more pure
@@ -56,10 +57,11 @@ export const Home = () => {
     termsFromLocalStorage
   );
   const [showingSearchResults, setShowingSearchResults] = useState(false);
-  const [suggestedHashtagList, setSuggestedHashtagList] = useState<string[]>(
+  const [suggestedHashtagList, setSuggestedHashtagList] = useState<string[][]>(
     mockedTerms
   );
   const [error, setError] = useState<Error | null>(null);
+  const [resultsViewHeight, setResultsViewHeight] = useState<number>(0);
 
   // ANIMATIONS
   const [fadeAnim] = useState(new Animated.Value(1));
@@ -279,11 +281,22 @@ export const Home = () => {
                 ))}
               </Text>
             </View>
+            {/* TODO: Make gradient and scroll view overlap */}
             <LinearGradient
               colors={["#D7D7D7", "#F6F6F6", "#FFF"]}
               style={{ height: 20, marginBottom: -5 }}
             />
-            <ScrollView>
+            <ScrollView
+              onLayout={e => {
+                console.log(
+                  Dimensions.get("screen").height - e.nativeEvent.layout.y - 50
+                );
+                setResultsViewHeight(
+                  Dimensions.get("screen").height - e.nativeEvent.layout.y - 50
+                );
+              }}
+              style={{ height: resultsViewHeight }}
+            >
               {suggestedHashtagList.map(tagArray => (
                 <>
                   <Text style={{ backgroundColor: "pink", width: "100%" }}>
@@ -305,11 +318,8 @@ export const Home = () => {
                 </>
               ))}
             </ScrollView>
-            {/* TODO: Really need to clean up this file and look into a better way of laying this out and doing the slide animation.
-            This bottom: 300 prob won't work on all devices */}
-            {/* THOUGHT: Instead of bs padding, should position: absolute the other layer off screen and then translate it up. */}
-            {/* Measure screen height, subtract top layer height, use that to set height of the off screen slidable page */}
-            <View style={{ position: "absolute", bottom: 300, width: "100%" }}>
+            {/* TODO: Add fading effect near button to indicate scrolling */}
+            <View style={{ width: "100%" }}>
               <Button
                 onPress={handleSubmit}
                 buttonStyle={styles.button}
